@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+group 'at.searles.fractviewlib'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    implementation 'com.github.searles.utils:math:0.2'
+    implementation 'com.github.searles.utils:color:0.2'
+    implementation 'com.github.searles:parsing:6f3101eb546be494df46879262909bacdb801842'
+    implementation 'com.github.searles:meelanlang:b10b82aa48467f0013566c42ef772941b949ad62'
+
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
+}
