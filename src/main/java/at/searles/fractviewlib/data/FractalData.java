@@ -132,8 +132,11 @@ public class FractalData implements Iterable<String> {
             }
 
             this.source = source;
-            this.ast = ParserInstance.get().parseSource(source);
-            this.externDecls = this.ast.collectExternDecls();
+
+            ParserInstance parser = new ParserInstance();
+
+            this.ast = parser.parseSource(source);
+            this.externDecls = parser.getExternDecls();
             parameters = new LinkedHashMap<>();
 
             return this;

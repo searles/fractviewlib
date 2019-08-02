@@ -1,17 +1,22 @@
 package at.searles.fractviewlib;
 
+import at.searles.lexer.Lexer;
 import at.searles.meelan.compiler.Ast;
 import at.searles.meelan.optree.Tree;
+import at.searles.meelan.optree.inlined.ExternDeclaration;
 import at.searles.meelan.parser.MeelanEnv;
 import at.searles.meelan.parser.MeelanParser;
 import at.searles.parsing.ParserStream;
+import at.searles.parsing.Recognizer;
+
+import java.util.Map;
 
 public class ParserInstance {
 
     private final MeelanEnv env;
 
     private static class Holder {
-        static final MeelanParser PARSER = new MeelanParser();
+        static final Recognizer EOF = Recognizer.eof(new Lexer());
     }
 
     public ParserInstance() {
@@ -21,10 +26,10 @@ public class ParserInstance {
     public Tree parseExpr(String sourceCode) {
         ParserStream stream = ParserStream.fromString(sourceCode);
 
-        Tree tree = Holder.PARSER.parseExpr(env, stream);
+        Tree tree = MeelanParser.expr().parse(env, stream);
 
-        if(!stream.isEmpty()) { // FIXME 2019-07-27 add method in parsing
-            // FIXME some kind of warning that it was not fully parsed?
+        if(!Holder.EOF.recognize(env, stream)) {
+            // XXX (2019-08-02) re-activate.
         }
 
         return tree;
@@ -33,12 +38,16 @@ public class ParserInstance {
     public Ast parseSource(String sourceCode) {
         ParserStream stream = ParserStream.fromString(sourceCode);
 
-        return Ast.parse(env, stream);
+        Ast ast = Ast.parse(env, stream);
 
-//        if(!stream.isEmpty()) {
-//            // TODO 2018-07-11: There should be some warning in this case
-//            // TODO but no exception because of backwards compatibility.
-//            // throw new MeelanException("not fully parsed!", null);
-//        }
+        if(!Holder.EOF.recognize(env, stream)) {
+            // XXX (2019-08-02) re-activate.
+        }
+
+        return ast;
+    }
+
+    public Map<String, ExternDeclaration> getExternDecls() {
+        return env.getExternDecls();
     }
 }

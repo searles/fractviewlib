@@ -49,7 +49,7 @@ public class CompileTest {
 
     @Test
     public void testV3() throws IOException {
-        File dir = new File("at/searles/fractviewlib/test/resources/assets/sources/v3");
+        File dir = new File("src/test/resources/assets/sources/v3");
 
         File[] files = dir.listFiles();
 

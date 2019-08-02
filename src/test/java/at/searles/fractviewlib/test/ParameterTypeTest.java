@@ -4,6 +4,7 @@ import at.searles.fractviewlib.data.ParameterType;
 import at.searles.commons.color.Palette;
 import at.searles.meelan.optree.Tree;
 import at.searles.meelan.optree.Vec;
+import at.searles.meelan.parser.DummyInfo;
 import at.searles.meelan.values.Int;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,7 +15,7 @@ public class ParameterTypeTest {
     @Test
     public void testSingleColorPalette() {
         // pal = [[0xffff0000]]
-        Tree tree = new Vec(Collections.singletonList(new Vec(Collections.singletonList(new Int(0xffff0000)))));
+        Tree tree = new Vec(DummyInfo.getInstance(), Collections.singletonList(new Vec(DummyInfo.getInstance(), Collections.singletonList(new Int(0xffff0000)))));
         Object value = ParameterType.Palette.toValue(tree);
 
         Assert.assertTrue(value instanceof Palette);

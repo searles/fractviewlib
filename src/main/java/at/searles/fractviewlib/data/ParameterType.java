@@ -139,7 +139,7 @@ public enum ParameterType {
         @Override
         public Tree toTree(Object value) {
             // kinda joker
-            return ParserInstance.get().parseExpr(value.toString());
+            return new ParserInstance().parseExpr(value.toString());
         }
 
         @Override

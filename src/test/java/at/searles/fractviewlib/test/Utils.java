@@ -9,7 +9,8 @@ import java.io.IOException;
 
 public class Utils {
     public static String readResourceFile(String filename) throws IOException {
-        return readFile(new File("at/searles/fractviewlib/test/resources/" + filename));
+        String currentDirectory = System.getProperty("user.dir");
+        return readFile(new File("src/test/resources/" + filename));
     }
 
     public static <A> A parse(String json, Class<A> cl) {
