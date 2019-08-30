@@ -11,7 +11,7 @@ import java.util.*;
 
 public class ParameterTableTest {
     private FractalCollection collection;
-    private ParameterTable table;
+    private List<ParameterTable.Entry> table;
     private Map<Integer, Integer> ids;
 
     private void withFractals(FractalData...dataFields) {
@@ -27,10 +27,9 @@ public class ParameterTableTest {
     }
 
     private void withExclusiveParameters(String...keys) {
-        Set<String> set = new TreeSet<>();
-        set.addAll(Arrays.asList(keys));
+        Set<String> set = new TreeSet<>(Arrays.asList(keys));
 
-        table = new ParameterTable().init(collection, set);
+        table = ParameterTable.create(0, collection, set);
     }
 
     @Test
@@ -44,15 +43,15 @@ public class ParameterTableTest {
 
         withExclusiveParameters("b");
 
-        Assert.assertEquals(3 + 2, table.count()); // + 2 is Scale/Source
+        Assert.assertEquals(3 + 2, table.size()); // + 2 is Scale/Source
 
         // Individuals first
 
         Assert.assertEquals("b", table.get(3).key);
-        Assert.assertEquals(ids.get(0), (Integer) table.get(3).owner);
+        Assert.assertEquals(ids.get(0), (Integer) table.get(3).id);
 
         Assert.assertEquals("b", table.get(4).key);
-        Assert.assertEquals(ids.get(1), (Integer) table.get(4).owner);
+        Assert.assertEquals(ids.get(1), (Integer) table.get(4).id);
 
         Assert.assertEquals("Source", table.get(0).key);
 
@@ -72,11 +71,11 @@ public class ParameterTableTest {
 
         withExclusiveParameters("b");
 
-        String s = "";
-        for(int i = 0; i < table.count(); ++i) {
-            s += table.get(i).key;
+        StringBuilder s = new StringBuilder();
+        for (ParameterTable.Entry entry : table) {
+            s.append(entry.key);
         }
 
-        Assert.assertEquals("SourceScaleabbcd", s);
+        Assert.assertEquals("SourceScaleabbcd", s.toString());
     }
 }

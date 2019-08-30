@@ -282,7 +282,7 @@ public class Fractal {
     /**
      * Returns true if the value has been updated.
      */
-    public boolean updateValue(String key, Object value) {
+    public boolean setValue(String key, Object value) {
         Parameter current = entries.get(key);
         if(current == null || (value != null && !current.type.isInstance(value))) {
             return false;

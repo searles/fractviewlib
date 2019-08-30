@@ -18,8 +18,7 @@ dependencies {
     implementation 'com.github.searles.utils:math:0.3.0'
     implementation 'com.github.searles.utils:color:0.3.0'
     implementation 'com.github.searles.utils:strings:0.3.0'
-    implementation 'com.github.searles:parsing:4b7baa83509672b81ab0857b601a0501cfd8697a'
-    implementation 'com.github.searles:meelanlang:bee644aa0b84b1bd25f3b45d66fa9e530cbbad3c'
+    implementation 'com.github.searles:meelanlang:12ed79fed36f8db7b5c2f2cd1074cd99e74b0fdf'
 
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'

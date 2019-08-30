@@ -1,9 +1,12 @@
 package at.searles.fractviewlib;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 
+/**
+ * Basically a list with custom indices=ids.
+ */
 public class FractalCollection {
 
     private ArrayList<Integer> order;
@@ -17,45 +20,15 @@ public class FractalCollection {
         this.fractals = new TreeMap<>();
     }
 
+    public Fractal get(int id) {
+        return fractals.get(id);
+    }
+
     /**
-     * @return true if the order was reorganized
+     * Treat this as immutable list.
      */
-    public boolean setKeyId(int id) {
-        if(!order.remove((Integer) id)) {
-            return false;
-        }
-
-        order.add(0, id);
-
-        return true;
-    }
-
-    public int keyId() {
-        return order.get(0);
-    }
-
-    public Fractal get(int ownerId) {
-        return fractals.get(ownerId);
-    }
-
-    public Iterable<Integer> ids() {
+    public List<Integer> ids() {
         return order;
-    }
-
-    public Iterable<Fractal> fractals() {
-        return () -> new Iterator<Fractal>() {
-            Iterator<Integer> it = ids().iterator();
-
-            @Override
-            public boolean hasNext() {
-                return it.hasNext();
-            }
-
-            @Override
-            public Fractal next() {
-                return get(it.next());
-            }
-        };
     }
 
     public int add(Fractal fractal) {

@@ -2,6 +2,7 @@ package at.searles.fractviewlib.test;
 
 import at.searles.fractviewlib.Fractal;
 import at.searles.fractviewlib.FractalProvider;
+import at.searles.fractviewlib.ParameterTable;
 import at.searles.fractviewlib.data.FractalData;
 import at.searles.commons.math.Scale;
 import at.searles.meelan.MeelanException;
@@ -9,13 +10,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class FractalProviderTest {
 
-    private FractalData.Builder builders[];
+    private FractalData.Builder[] builders;
     private FractalProvider provider;
     private ArrayList<Integer> ids;
+    private List<ParameterTable.Entry> table;
 
     private void withSources(String...sources) {
         builders = new FractalData.Builder[sources.length];
@@ -23,10 +26,6 @@ public class FractalProviderTest {
         for(int i = 0; i < sources.length; ++i) {
             builders[i] = new FractalData.Builder().setSource(sources[i]);
         }
-    }
-
-    private void withParameter(int n, String id, Object value) {
-        builders[n].addParameter(id, value);
     }
 
     private void withProvider(String...exclusiveParameters) {
@@ -50,8 +49,8 @@ public class FractalProviderTest {
 
         provider.setParameterValue(Fractal.SOURCE_LABEL, ids.get(0), "var b = 2;");
 
-        Assert.assertEquals("var b = 2;", provider.getParameterValue(Fractal.SOURCE_LABEL, ids.get(0)));
-        Assert.assertEquals("var a = 1;", provider.getParameterValue(Fractal.SOURCE_LABEL, ids.get(1)));
+        Assert.assertEquals("var b = 2;", provider.getParameter(Fractal.SOURCE_LABEL, ids.get(0)).value);
+        Assert.assertEquals("var a = 1;", provider.getParameter(Fractal.SOURCE_LABEL, ids.get(1)).value);
     }
 
     @Test
@@ -62,8 +61,8 @@ public class FractalProviderTest {
 
         provider.setParameterValue(Fractal.SOURCE_LABEL, ids.get(0), "var b = 2;");
 
-        Assert.assertEquals("var b = 2;", provider.getParameterValue(Fractal.SOURCE_LABEL, ids.get(0)));
-        Assert.assertEquals("var b = 2;", provider.getParameterValue(Fractal.SOURCE_LABEL, ids.get(1)));
+        Assert.assertEquals("var b = 2;", provider.getParameter(Fractal.SOURCE_LABEL, ids.get(0)).value);
+        Assert.assertEquals("var b = 2;", provider.getParameter(Fractal.SOURCE_LABEL, ids.get(1)).value);
     }
 
     @Test
@@ -73,12 +72,14 @@ public class FractalProviderTest {
 
         withProvider();
 
-        String s = "";
-        for(int i = 0; i < provider.parameterCount(); ++i) {
-            s += provider.getParameterEntryByIndex(i).key;
+        createTable(0);
+        
+        StringBuilder s = new StringBuilder();
+        for (ParameterTable.Entry entry : table) {
+            s.append(entry.key);
         }
 
-        Assert.assertEquals("SourceScaleabcd", s);
+        Assert.assertEquals("SourceScaleabcd", s.toString());
     }
 
     @Test
@@ -88,19 +89,21 @@ public class FractalProviderTest {
 
         withProvider();
 
-        provider.setKeyId(2);
+        createTable(ids.get(1));
 
-        Assert.assertEquals("a", provider.getParameterEntryByIndex(3).key);
-        Assert.assertEquals("b", provider.getParameterEntryByIndex(2).key);
+        Assert.assertEquals((int) ids.get(1), table.get(3).id);
 
-        provider.setKeyId(1);
+        Assert.assertEquals("a", table.get(3).key);
+        Assert.assertEquals("b", table.get(2).key);
 
-        Assert.assertEquals("a", provider.getParameterEntryByIndex(2).key);
-        Assert.assertEquals("b", provider.getParameterEntryByIndex(3).key);
+        createTable(ids.get(0));
+
+        Assert.assertEquals("a", table.get(2).key);
+        Assert.assertEquals("b", table.get(3).key);
     }
 
     @Test
-    public void testTypeFailOnImplicitExterns() {
+    public void testTypeChangeOnImplicitExterns() {
         withSources("extern a expr = \"b\"; var d = a",
                 "extern a expr = \"0\"; extern b int = 1; var d = a + b");
 
@@ -108,15 +111,9 @@ public class FractalProviderTest {
 
         provider.setParameterValue("b", -1, "10");
 
-        // owner is ignored because it is a non-shared parameter
-        provider.setKeyId(ids.get(0));
-        Assert.assertEquals("10", provider.getParameterValue("b", -1));
-
-        provider.setKeyId(ids.get(1));
-        Assert.assertEquals(1, provider.getParameterValue("b", -1));
-
-        provider.setKeyId(ids.get(0));
-        Assert.assertEquals("10", provider.getParameterValue("b", -1));
+        // id is ignored because it is a non-shared parameter
+        Assert.assertEquals("10", provider.getParameter("b", ids.get(0)).value);
+        Assert.assertEquals(1, provider.getParameter("b", ids.get(1)).value);
     }
 
     @Test
@@ -127,8 +124,7 @@ public class FractalProviderTest {
         withProvider();
 
         provider.setParameterValue("b", -1, 2);
-
-        Assert.assertEquals("0", provider.getParameterValue("b", -1));
+        Assert.assertEquals("0", provider.getParameter("b", ids.get(0)).value);
     }
 
     @Test
@@ -138,19 +134,21 @@ public class FractalProviderTest {
 
         withProvider("b");
 
-        Assert.assertEquals(4 + 2, provider.parameterCount()); // + 2 is scale/source
+        createTable(-1);
 
-        Assert.assertEquals("Source", provider.getParameterEntryByIndex(0).key);
+        Assert.assertEquals(4 + 2, table.size()); // + 2 is scale/source
 
-        Assert.assertEquals("b", provider.getParameterEntryByIndex(3).key);
-        Assert.assertNotEquals(-1, provider.getParameterEntryByIndex(3).owner);
+        Assert.assertEquals("Source", table.get(0).key);
 
-        Assert.assertEquals("b", provider.getParameterEntryByIndex(4).key);
-        Assert.assertNotEquals(-1, provider.getParameterEntryByIndex(4).owner);
+        Assert.assertEquals("b", table.get(3).key);
+        Assert.assertNotEquals(-1, table.get(3).id);
 
-        Assert.assertEquals("c", provider.getParameterEntryByIndex(5).key);
+        Assert.assertEquals("b", table.get(4).key);
+        Assert.assertNotEquals(-1, table.get(4).id);
 
-        Assert.assertEquals("a", provider.getParameterEntryByIndex(2).key);
+        Assert.assertEquals("c", table.get(5).key);
+
+        Assert.assertEquals("a", table.get(2).key);
     }
 
     @Test
@@ -162,72 +160,35 @@ public class FractalProviderTest {
 
         int id0 = p.addFractal(builders[0].commit());
 
-        Assert.assertEquals(4, p.parameterCount());
+        List<ParameterTable.Entry> t = p.createTable(id0);
+
+        Assert.assertEquals(4, t.size());
 
         int id1 = p.addFractal(builders[1].commit());
 
-        Assert.assertEquals(5, p.parameterCount());
+        t = p.createTable(id0);
 
-        p.setKeyId(id0);
-        p.removeFractal(id0);
-
-        Assert.assertEquals(1, p.fractalCount());
-        Assert.assertEquals(id1, p.keyId());
-        Assert.assertEquals(3, p.parameterCount());
-
-        int newId = p.addFractal(builders[0].commit());
-
-        p.setKeyId(newId);
-
-        Assert.assertEquals(5, p.parameterCount());
-
-        p.removeFractal(newId);
-
-        Assert.assertEquals(1, p.fractalCount());
-        Assert.assertEquals(id1, p.keyId());
-        Assert.assertEquals(3, p.parameterCount());
-    }
-
-    @Test
-    public void testParametersChangeOnFractalRemovalWithUnsharedParameters() {
-        withSources("extern a int = 0; extern b int = 1; var d = a + b",
-                "extern a int = 0; extern c int = 2; var d = c");
-
-        withParameter(0, "a", 0);
-        withParameter(1, "a", 0);
-
-        FractalProvider p = new FractalProvider();
-        p.addExclusiveParameter("a");
-        p.addExclusiveParameter("b");
-        p.addExclusiveParameter("c");
-
-        int id0 = p.addFractal(builders[0].commit());
-
-        Assert.assertEquals(4, p.parameterCount());
-
-        int id1 = p.addFractal(builders[1].commit());
-
-        Assert.assertEquals(5, p.parameterCount());
-
-        p.setKeyId(id0);
+        Assert.assertEquals(5, t.size());
 
         p.removeFractal(id0);
 
+        t = p.createTable(id1);
+
         Assert.assertEquals(1, p.fractalCount());
-        Assert.assertEquals(id1, p.keyId());
-        Assert.assertEquals(3, p.parameterCount());
+        Assert.assertEquals(3, t.size());
 
         int newId = p.addFractal(builders[0].commit());
 
-        p.setKeyId(newId);
+        t = p.createTable(newId);
 
-        Assert.assertEquals(5, p.parameterCount());
+        Assert.assertEquals(5, t.size());
 
         p.removeFractal(newId);
 
+        t = p.createTable(id1);
+
         Assert.assertEquals(1, p.fractalCount());
-        Assert.assertEquals(id1, p.keyId());
-        Assert.assertEquals(3, p.parameterCount());
+        Assert.assertEquals(3, t.size());
     }
 
     @Test
@@ -236,15 +197,17 @@ public class FractalProviderTest {
         withProvider();
 
         provider.setParameterValue("Source", -1, "extern b expr = \"1\"; var c = b");
-        Assert.assertEquals("b", provider.getParameterEntryByIndex(2).key);
+        createTable(-1);
+        Assert.assertEquals("b", table.get(2).key);
     }
 
     @Test
     public void testExternExpr() {
         withSources("extern a expr = \"0\"; var d = a");
         withProvider();
+        createTable(-1);
 
-        Assert.assertEquals("0", provider.getParameterEntryByIndex(2).parameter.value);
+        Assert.assertEquals("a", table.get(2).key);
     }
 
     @Test
@@ -256,7 +219,7 @@ public class FractalProviderTest {
         provider.setParameterValue("a", -1, "1");
 
         // 0 is scale
-        Assert.assertEquals("1", provider.getParameterEntryByIndex(2).parameter.value);
+        Assert.assertEquals("1", provider.getParameter("a", ids.get(0)).value);
     }
 
     @Test
@@ -294,7 +257,7 @@ public class FractalProviderTest {
 
         withProvider("b");
 
-        int listenerCalled[] = new int[]{0, 0};
+        int[] listenerCalled = new int[]{0, 0};
 
         Fractal.Listener listener0 = fractal -> listenerCalled[0]++;
 
@@ -321,14 +284,25 @@ public class FractalProviderTest {
         // d is not defined
         provider.setParameterValue("d", ids.get(0), 404);
 
+        createTable(0);
+
         Assert.assertEquals(2, listenerCalled[0]); // individual in first.
         Assert.assertEquals(2, listenerCalled[1]);
 
-        Assert.assertEquals(9, provider.getParameterEntryByIndex(3).parameter.value); // b in [0]
-        Assert.assertEquals(1, provider.getParameterEntryByIndex(4).parameter.value); // b in [1]
+        Assert.assertEquals("b", table.get(3).key); // b in [0]
+        Assert.assertEquals((int) ids.get(0), table.get(3).id);
 
-        Assert.assertEquals(13, provider.getParameterEntryByIndex(5).parameter.value); // c in [1]
+        Assert.assertEquals("b", table.get(4).key); // b in [1]
+        Assert.assertEquals((int) ids.get(1), table.get(4).id);
 
-        Assert.assertEquals(5, provider.getParameterEntryByIndex(2).parameter.value); // a in both
+        Assert.assertEquals("c", table.get(5).key); // c in [1]
+        Assert.assertEquals("c", table.get(5).key); // c in [1]
+
+        Assert.assertEquals("a", table.get(2).key); // a in both
     }
+
+    private void createTable(int selectedId) {
+        this.table = provider.createTable(selectedId);
+    }
+
 }
